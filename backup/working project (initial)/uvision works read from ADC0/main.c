@@ -186,7 +186,7 @@ void SetupADC()
     sADCx.ADC_Channels         = 0;
     sADCx.ADC_VRefSource       = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource    = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler        = ADC_CLK_div_64;
+    sADCx.ADC_Prescaler        = ADC_CLK_div_256;
     sADCx.ADC_DelayGo          = 0xF;
     ADC1_Init (&sADCx);
 
