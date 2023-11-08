@@ -189,7 +189,7 @@ void SetupADC()
     sADCx.ADC_Prescaler        = ADC_CLK_div_256;													 
     sADCx.ADC_DelayGo          = 0xF;																				// Некорректный параметр, он должен быть в пределах от 0 до 7
     ADC1_Init (&sADCx);
-
+	
     /* Enable ADC1 EOCIF and AWOIFEN interupts */
     ADC1_ITConfig((ADCx_IT_END_OF_CONVERSION), ENABLE);
 
@@ -200,8 +200,11 @@ void SetupADC()
 // обработчик прерываний
 void ADC_IRQHandler(void)
 {
-	int tmp = MDR_ADC->ADC1_RESULT & 0x0FFF;
-    USB_Print("%d\n", tmp);
+	uint8_t tmp[2];
+	tmp[0] = MDR_ADC->ADC1_RESULT & 0x0FF;
+	tmp[1] = ((MDR_ADC->ADC1_RESULT) >> 8) & 0x0F;
+	USB_CDC_SendData(tmp, 2);
+	//    USB_Print("%d\n", tmp);
 }
 
 /**
@@ -257,8 +260,8 @@ void Setup_USB(void)
 
 	/* Device layer initialization */
 	//USB_Clock_InitStruct.USB_USBC1_Source = USB_C1HSIdiv1; //HSE not working :( using HSI 8Mhz
-	USB_Clock_InitStruct.USB_USBC1_Source = USB_C1HSEdiv2; //HSE 
-	USB_Clock_InitStruct.USB_PLLUSBMUL = USB_PLLUSBMUL6;   //was 12
+	USB_Clock_InitStruct.USB_USBC1_Source = USB_C1HSEdiv1; //HSE 
+	USB_Clock_InitStruct.USB_PLLUSBMUL = USB_PLLUSBMUL3;   //was 12
 
 	USB_DeviceBUSParam.MODE = USB_SC_SCFSP_Full;
 	USB_DeviceBUSParam.SPEED = USB_SC_SCFSR_12Mb;

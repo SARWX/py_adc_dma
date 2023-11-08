@@ -3267,8 +3267,11 @@ void SetupADC()
 
 void ADC_IRQHandler(void)
 {
- int tmp = ((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT & 0x0FFF;
-    USB_Print("%d\n", tmp);
+ uint8_t tmp[2];
+ tmp[0] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT & 0x0FF;
+ tmp[1] = ((((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT) >> 8) & 0x0F;
+ USB_CDC_SendData(tmp, 2);
+
 }
 
 
@@ -3324,8 +3327,8 @@ void Setup_USB(void)
 
 
 
- USB_Clock_InitStruct.USB_USBC1_Source = USB_C1HSEdiv2;
- USB_Clock_InitStruct.USB_PLLUSBMUL = USB_PLLUSBMUL6;
+ USB_Clock_InitStruct.USB_USBC1_Source = USB_C1HSEdiv1;
+ USB_Clock_InitStruct.USB_PLLUSBMUL = USB_PLLUSBMUL3;
 
  USB_DeviceBUSParam.MODE = (uint32_t)(1 << 4);
  USB_DeviceBUSParam.SPEED = (uint32_t)(1 << 5);
@@ -3374,7 +3377,7 @@ USB_Result USB_CDC_RecieveData(uint8_t *Buffer, uint32_t Length)
  RecBuf[Length] = 0;
  return USB_SUCCESS;
 }
-# 319 "main.c"
+# 322 "main.c"
 USB_Result USB_CDC_GetLineCoding(uint16_t wINDEX, USB_CDC_LineCoding_TypeDef *DATA)
 {
  ((void)0U);

@@ -3355,7 +3355,7 @@ static void VCom_Configuration(void)
 {
 
 
-  LineCoding.dwDTERate = 2000000;
+  LineCoding.dwDTERate = 115200;
   LineCoding.bCharFormat = 0;
   LineCoding.bParityType = 0;
   LineCoding.bDataBits = 8;
