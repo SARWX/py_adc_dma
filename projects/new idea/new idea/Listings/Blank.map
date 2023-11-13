@@ -7,8 +7,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       822          0         73          0        418      13209   main.o
-       434          0          0          0          0      12141   mdr32f9qx_adc.o
+       758          0         73          0        418      13198   main.o
+       282          0          0          0          0      12141   mdr32f9qx_adc.o
        288          0          0          0          0       5108   mdr32f9qx_port.o
        260          0          0          0          0      13990   mdr32f9qx_rst_clk.o
        330          0          0          0          0      11140   mdr32f9qx_usb.o
@@ -18,9 +18,9 @@ Image component sizes
        148          0          0          4          0       1816   system_mdr32f9qx.o
 
     ----------------------------------------------------------------------
-      5882         86        300         92      25224      87853   Object Totals
+      5662         86        300         92      25224      87842   Object Totals
          0          0         32          0          0          0   (incl. Generated)
-        68          0          3          3          8          0   (incl. Padding)
+        64          0          3          3          8          0   (incl. Padding)
 
     ----------------------------------------------------------------------
 
@@ -127,15 +127,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     12708        350        852         92      25320      89629   Grand Totals
-     12708        350        852         92      25320      89629   ELF Image Totals
-     12708        350        852         92          0          0   ROM Totals
+     12488        350        852         92      25320      89618   Grand Totals
+     12488        350        852         92      25320      89618   ELF Image Totals
+     12488        350        852         92          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                13560 (  13.24kB)
+    Total RO  Size (Code + RO Data)                13340 (  13.03kB)
     Total RW  Size (RW Data + ZI Data)             25412 (  24.82kB)
-    Total ROM Size (Code + RO Data + RW Data)      13652 (  13.33kB)
+    Total ROM Size (Code + RO Data + RW Data)      13432 (  13.12kB)
 
 ==============================================================================
 

@@ -3197,11 +3197,15 @@ int main(void)
  VCom_Configuration();
 
 
- SetupADC();
- SetupADC2();
+
+ USB_CDC_Init(Buffer, 1, SET);
+
+
+
  USB_CDC_Init(Buffer, 1, SET);
  Setup_CPU_Clock();
  Setup_USB();
+ SetupADC();
 
 
  RST_CLK_PCLKcmd (((uint32_t)(1U << ((((uint32_t)(0x400B8000)) >> 15) & 0x1F))), ENABLE);
@@ -3260,7 +3264,7 @@ void SetupADC()
     sADCx.ADC_Channels = 0;
     sADCx.ADC_VRefSource = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler = ADC_CLK_div_32;
+    sADCx.ADC_Prescaler = ADC_CLK_div_256;
     sADCx.ADC_DelayGo = 0xF;
     ADC1_Init (&sADCx);
 
@@ -3274,10 +3278,40 @@ void SetupADC()
 
 void SetupADC2()
 {
+     RST_CLK_PCLKcmd((((uint32_t)(1U << ((((uint32_t)(0x40020000)) >> 15) & 0x1F))) | ((uint32_t)(1U << ((((uint32_t)(0x40088000)) >> 15) & 0x1F)))), ENABLE);
+    RST_CLK_PCLKcmd((((uint32_t)(1U << ((((uint32_t)(0x400B8000)) >> 15) & 0x1F))) | ((uint32_t)(1U << ((((uint32_t)(0x400C0000)) >> 15) & 0x1F)))), ENABLE);
+
+
+    ((SCB_Type *) ((0xE000E000UL) + 0x0D00UL) )->AIRCR = 0x05FA0000 | ((uint32_t)0x500);
+    ((SCB_Type *) ((0xE000E000UL) + 0x0D00UL) )->VTOR = 0x08000000;
+
+    ((NVIC_Type *) ((0xE000E000UL) + 0x0100UL) )->ICPR[0] = 0xFFFFFFFF;
+    ((NVIC_Type *) ((0xE000E000UL) + 0x0100UL) )->ICER[0] = 0xFFFFFFFF;
+
+ ((NVIC_Type *) ((0xE000E000UL) + 0x0100UL) )->ISER[0] = (1<<ADC_IRQn);
+
+
+
+
+
+    PORT_DeInit(((MDR_PORT_TypeDef *) (0x400C0000)));
+
+
+
+    PORT_InitStructure.PORT_Pin = PORT_Pin_1;
+    PORT_InitStructure.PORT_OE = PORT_OE_IN;
+    PORT_InitStructure.PORT_MODE = PORT_MODE_ANALOG;
+    PORT_Init(((MDR_PORT_TypeDef *) (0x400C0000)), &PORT_InitStructure);
+
+
+
+    ADC_DeInit();
+
+
+
+
     ADC_StructInit(&sADC);
     ADC_Init (&sADC);
-
-    ADCx_StructInit (&sADCx);
     sADCx.ADC_ClockSource = ADC_CLOCK_SOURCE_CPU;
     sADCx.ADC_SamplingMode = ADC_SAMPLING_MODE_CYCLIC_CONV;
     sADCx.ADC_ChannelSwitching = ADC_CH_SWITCHING_Disable;
@@ -3285,7 +3319,7 @@ void SetupADC2()
     sADCx.ADC_Channels = (((uint32_t)0x1) << ADC_CH_ADC1 );
     sADCx.ADC_VRefSource = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler = ADC_CLK_div_32;
+    sADCx.ADC_Prescaler = ADC_CLK_div_512;
     sADCx.ADC_DelayGo = 0xF;
     ADC2_Init (&sADCx);
 
@@ -3295,10 +3329,10 @@ void SetupADC2()
 
     ADC2_Cmd (ENABLE);
 }
-# 239 "main.c"
+# 273 "main.c"
 void ADC_IRQHandler(void)
 {
- ADC_tmp[ADC_INTER_CNT] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC2_RESULT & 0x0FFF;
+ ADC_tmp[ADC_INTER_CNT] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT & 0x0FFF;
  if (++ADC_INTER_CNT > 23) {
   ADC_INTER_CNT = 0;
     USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC_tmp[0], ADC_tmp[1], ADC_tmp[2], ADC_tmp[3], ADC_tmp[4], ADC_tmp[5], ADC_tmp[6], ADC_tmp[7], ADC_tmp[8], ADC_tmp[9], ADC_tmp[10], ADC_tmp[11], ADC_tmp[12], ADC_tmp[13], ADC_tmp[14], ADC_tmp[15], ADC_tmp[16], ADC_tmp[17], ADC_tmp[18], ADC_tmp[19], ADC_tmp[20], ADC_tmp[21], ADC_tmp[22], ADC_tmp[23]);
@@ -3409,7 +3443,7 @@ USB_Result USB_CDC_RecieveData(uint8_t *Buffer, uint32_t Length)
  RecBuf[Length] = 0;
  return USB_SUCCESS;
 }
-# 361 "main.c"
+# 395 "main.c"
 USB_Result USB_CDC_GetLineCoding(uint16_t wINDEX, USB_CDC_LineCoding_TypeDef *DATA)
 {
  ((void)0U);

@@ -130,12 +130,16 @@ int main(void)
 	VCom_Configuration();
 
 	/* CDC layer initialization */
-	SetupADC();
-	SetupADC2();
+
+	USB_CDC_Init(Buffer, 1, SET);
+
+
+
 	USB_CDC_Init(Buffer, 1, SET);
 	Setup_CPU_Clock();
 	Setup_USB();
-  
+	SetupADC();
+	// SetupADC2();
 	// Инициализация пина для светодиода
 	RST_CLK_PCLKcmd (RST_CLK_PCLK_PORTC, ENABLE);
 	PORT_InitStructure.PORT_Pin = (LED_Pin);
@@ -193,7 +197,7 @@ void SetupADC()
     sADCx.ADC_Channels         = 0;
     sADCx.ADC_VRefSource       = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource    = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler        = ADC_CLK_div_32;
+    sADCx.ADC_Prescaler        = ADC_CLK_div_256;
     sADCx.ADC_DelayGo          = 0xF;
     ADC1_Init (&sADCx);
 
@@ -207,10 +211,40 @@ void SetupADC()
 
 void SetupADC2()
 {
+	    RST_CLK_PCLKcmd((RST_CLK_PCLK_RST_CLK | RST_CLK_PCLK_ADC), ENABLE);
+    RST_CLK_PCLKcmd((RST_CLK_PCLK_PORTC | RST_CLK_PCLK_PORTD), ENABLE);
+
+	/* Init NVIC */
+    SCB->AIRCR = 0x05FA0000 | ((uint32_t)0x500);
+    SCB->VTOR = 0x08000000;
+    /* Disable all interrupt */
+    NVIC->ICPR[0] = 0xFFFFFFFF;
+    NVIC->ICER[0] = 0xFFFFFFFF;
+
+	NVIC->ISER[0] = (1<<ADC_IRQn);
+	
+	
+	
+	
+		/* Reset PORTD settings */
+    PORT_DeInit(MDR_PORTD);
+
+	/* Configure ADC pins: ADC1 */
+    /* Configure PORTD pins 1 */
+    PORT_InitStructure.PORT_Pin   = PORT_Pin_1;
+    PORT_InitStructure.PORT_OE    = PORT_OE_IN;
+    PORT_InitStructure.PORT_MODE  = PORT_MODE_ANALOG;
+    PORT_Init(MDR_PORTD, &PORT_InitStructure);
+
+	/* ADC Configuration */
+    /* Reset all ADC settings */
+    ADC_DeInit();
+	
+	
+	
+	
     ADC_StructInit(&sADC);
     ADC_Init (&sADC);
-
-    ADCx_StructInit (&sADCx);
     sADCx.ADC_ClockSource      = ADC_CLOCK_SOURCE_CPU;
     sADCx.ADC_SamplingMode     = ADC_SAMPLING_MODE_CYCLIC_CONV;
     sADCx.ADC_ChannelSwitching = ADC_CH_SWITCHING_Disable;
@@ -218,7 +252,7 @@ void SetupADC2()
     sADCx.ADC_Channels         = ADC_CH_ADC1_MSK;
     sADCx.ADC_VRefSource       = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource    = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler        = ADC_CLK_div_32;
+    sADCx.ADC_Prescaler        = ADC_CLK_div_512;
     sADCx.ADC_DelayGo          = 0xF;
     ADC2_Init (&sADCx);
 
@@ -238,7 +272,7 @@ void SetupADC2()
 // обработчик прерываний
 void ADC_IRQHandler(void)
 {
-	ADC_tmp[ADC_INTER_CNT] = MDR_ADC->ADC2_RESULT & 0x0FFF;
+	ADC_tmp[ADC_INTER_CNT] = MDR_ADC->ADC1_RESULT & 0x0FFF;
 	if (++ADC_INTER_CNT > 23) {
 		ADC_INTER_CNT = 0;
     USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC_tmp[0], ADC_tmp[1], ADC_tmp[2], ADC_tmp[3], ADC_tmp[4], ADC_tmp[5], ADC_tmp[6], ADC_tmp[7], ADC_tmp[8], ADC_tmp[9], ADC_tmp[10], ADC_tmp[11], ADC_tmp[12], ADC_tmp[13], ADC_tmp[14], ADC_tmp[15], ADC_tmp[16], ADC_tmp[17], ADC_tmp[18], ADC_tmp[19], ADC_tmp[20], ADC_tmp[21], ADC_tmp[22], ADC_tmp[23]);
