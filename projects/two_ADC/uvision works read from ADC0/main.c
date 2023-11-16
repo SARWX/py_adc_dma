@@ -14,6 +14,7 @@
 #include "MDR32F9Qx_ssp.h"
 #include "MDR32F9Qx_port.h"
 #include "MDR32F9Qx_adc.h"
+#include "MDR32F9Qx_dma.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -55,8 +56,19 @@ char tokens[5][BUFFER_LENGTH * 2]; //usb parsing tokens pointers array
 char tempString[100];			   //debug
 
 //uint32_t RecLen = 0;//usb data len
+// structures for ADC
 ADC_InitTypeDef sADC;
 ADCx_InitTypeDef sADCx;
+// structures for DMA
+DMA_ChannelInitTypeDef sDMA;
+DMA_CtrlDataInitTypeDef sDMA_PriCtrlData;				// Primary control data
+DMA_CtrlDataInitTypeDef sDMA_AltCtrlData;				// Alternative control data
+
+
+// DMA_CtrlDataTypeDef sDMA_ctrl_table;
+
+
+
 
 #ifdef USB_CDC_LINE_CODING_SUPPORTED
 static USB_CDC_LineCoding_TypeDef LineCoding;
@@ -67,6 +79,7 @@ static void Setup_CPU_Clock(void); // настройка тактировани�
 static void Setup_USB(void);
 static void VCom_Configuration(void); // конфигурация виртуального COM-порта
 static void USB_PrintDebug(char *format, ...); // вывод отладочных сообщений
+static void SetupDMA();
 static void SetupADC(); // настройка АЦП
 void ADC_IRQHandler(void); // обработчик прерываний АЦП
 
@@ -93,6 +106,8 @@ void delayTick(uint32_t count)
 //         pause--;
 // }
 
+
+
 // вывод символов в USB 
 void USB_Print(char *format, ...)
 {
@@ -102,7 +117,8 @@ void USB_Print(char *format, ...)
 	vsprintf(tempString, format, argptr);
 	va_end(argptr);
 	USB_CDC_SendData((uint8_t *)tempString, strlen(tempString));
-	delayTick(timeout);
+	
+	//delayTick(timeout);
 }
 
 void USB_PrintDebug(char *format, ...)
@@ -120,16 +136,21 @@ void USB_PrintDebug(char *format, ...)
 }
 
 // global arrays for ADC buffers
-uint16_t ADC1_array[20];
-uint16_t ADC2_array[20];
+uint16_t ADC1_array[50];
+uint16_t ADC2_array[50];
 // common ADC counter
 uint8_t ADC_USER_COUNTER = 0;
+// ADC transmit request
+int ADC_TX_REQUEST = 0;
+
 int main(void)
 {
+	// delayTick(0xFFFF);
 	VCom_Configuration();
 
 	/* CDC layer initialization */
 	SetupADC();
+	SetupDMA();
 	USB_CDC_Init(Buffer, 1, SET);
 	Setup_CPU_Clock();
 	Setup_USB();
@@ -143,15 +164,18 @@ int main(void)
 	PORT_Init(LED_Port, &PORT_InitStructure);
 
 	/* Main loop */
-	while (1) // закомментированно мигание светодиодом
-	{
-		// PORT_ResetBits(LED_Port, LED_Pin); // сброс состояния бита в логический ноль
-		// delayTick(24000000); // задержка в тактах
-		// PORT_SetBits(LED_Port, LED_Pin); // установка бита в логическую 1
-		// delayTick(24000000);
+	while (1){
+		if(ADC_TX_REQUEST) {
+			// Send data by USB
+			//	USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC2_array[0], ADC2_array[1], ADC2_array[2],ADC2_array[3], ADC2_array[4], ADC2_array[5], ADC2_array[6], ADC2_array[7], ADC2_array[8], ADC2_array[9]
+			//	, ADC2_array[10], ADC2_array[11], ADC2_array[12],ADC2_array[13], ADC2_array[14], ADC2_array[15], ADC2_array[16], ADC2_array[17], ADC2_array[18], ADC2_array[19]);
+			// ACD1
+			USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
+			, ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
+			ADC_TX_REQUEST = 0;
+		}
 	}
 }
-
 void SetupADC()
 {
 	/* Enable peripheral clocks */
@@ -191,7 +215,7 @@ void SetupADC()
     sADCx.ADC_Channels         = ADC_CH_ADC0_MSK;
     sADCx.ADC_VRefSource       = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource    = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler        = ADC_CLK_div_16;
+    sADCx.ADC_Prescaler        = ADC_CLK_div_32;
     sADCx.ADC_DelayGo          = 0xF;
     ADC1_Init (&sADCx);
 		// Copy configuration of ADC1 to ADC2, change the channel
@@ -202,7 +226,10 @@ void SetupADC()
     /* Enable ADC1 EOCIF and AWOIFEN interupts */
     ADC1_ITConfig((ADCx_IT_END_OF_CONVERSION), ENABLE);
 
-    /* ADC1 enable */
+		// lower IRQ priority
+	//	NVIC_SetPriority(ADC_IRQn, 0xA);
+
+    /* ADC enable */
     ADC1_Cmd (ENABLE);
 		ADC2_Cmd (ENABLE);
 }
@@ -210,6 +237,7 @@ void SetupADC()
 // обработчик прерываний
 void ADC_IRQHandler(void)
 {
+	DMA_Request(DMA_Channel_ADC1);
 	// Write mesurenment to the buffer
 	// ALL ODD ADC MESURENMENTS write to ADC1_array
 	if (ADC_USER_COUNTER % 2) {						
@@ -221,18 +249,13 @@ void ADC_IRQHandler(void)
 	}
 	
 	// Check if buffer not full
-	if (ADC_USER_COUNTER > 39) {
-	// Reset counter
-	ADC_USER_COUNTER = 0;
-	
-	// Send data by USB
-//	USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC2_array[0], ADC2_array[1], ADC2_array[2],ADC2_array[3], ADC2_array[4], ADC2_array[5], ADC2_array[6], ADC2_array[7], ADC2_array[8], ADC2_array[9]
-//	, ADC2_array[10], ADC2_array[11], ADC2_array[12],ADC2_array[13], ADC2_array[14], ADC2_array[15], ADC2_array[16], ADC2_array[17], ADC2_array[18], ADC2_array[19]);
-		// ACD1
-	USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
-	, ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
+	if (ADC_USER_COUNTER > 39) {   // 39
+		// Reset counter
+		ADC_USER_COUNTER = 0;
+		// Set Transmit request
+		ADC_TX_REQUEST = 1;
 	}
-	}
+}
 
 /**
 	* @brief	Frequencies setup
@@ -298,7 +321,9 @@ void Setup_USB(void)
 
 	/* Enable all USB interrupts */
 	USB_SetSIM(USB_SIS_Msk);
-
+	// Try to lower USB interrupt priority
+	// NVIC_SetPriority(USB_IRQn, 0xA);
+	
 	USB_DevicePowerOn();
 
 	/* Enable interrupt on USB */
@@ -381,3 +406,38 @@ USB_Result USB_CDC_SetLineCoding(uint16_t wINDEX, const USB_CDC_LineCoding_TypeD
 }
 
 #endif /* USB_CDC_LINE_CODING_SUPPORTED */
+
+
+
+
+void SetupDMA() {
+	// enable clocking
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE);		// enable clocking of the dma controller
+	
+	// initialize DMA CtrlData structure
+	sDMA_PriCtrlData.DMA_SourceBaseAddr = (uint32_t) &MDR_ADC->ADC1_RESULT;		// From where we will get the data
+	sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC2_array;								// Our buffer for adc1
+	sDMA_PriCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;											// NO increment for ADC
+	sDMA_PriCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;										// increment = 16 bit for our uint_16t buffer
+	sDMA_PriCtrlData.DMA_Mode = DMA_Mode_Basic;																// DMA mode
+	sDMA_PriCtrlData.DMA_CycleSize = 16;																			// 16 mesurements per cycle (64 /2 byte /2 ADC)
+	sDMA_PriCtrlData.DMA_NumContinuous = DMA_Transfers_16;										// 16  DMA transfers can occur before the DMA controller rearbitrates
+	sDMA_PriCtrlData.DMA_SourceProtCtrl = DMA_SourceCacheable;								// src mem is cacheable
+	sDMA_PriCtrlData.DMA_DestProtCtrl = DMA_SourceCacheable;									// dst mem is cacheable
+	
+	// initialize DMA structure
+	sDMA.DMA_PriCtrlData = &sDMA_PriCtrlData;																	// get sDMA_PriCtrlData configuration
+	sDMA.DMA_AltCtrlData = NULL;																							// dont use, so NULL
+	sDMA.DMA_ProtCtrl = DMA_AHB_Cacheable;
+	sDMA.DMA_Priority = DMA_Priority_High;																			// high priority
+	sDMA.DMA_UseBurst = DMA_BurstClear; 
+	sDMA.DMA_SelectDataStructure = DMA_CTRL_DATA_PRIMARY;											// select primary Data Structure
+	
+	// initialize DMA
+	DMA_Init(DMA_Channel_ADC1, &sDMA);				// init 8 channel via sDMA structure (8 channel - DMA_Channel_ADC1)
+	// enable DMA
+	DMA_Cmd(DMA_Channel_ADC1, ENABLE);
+}
+
+
+

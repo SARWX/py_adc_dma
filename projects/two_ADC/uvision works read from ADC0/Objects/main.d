@@ -12,7 +12,7 @@
   SPL\MDR32Fx\inc\USB_Library\MDR32F9Qx_usb_device.h \
   SPL\MDR32Fx\inc\MDR32F9Qx_usb.h SPL\MDR32Fx\inc\MDR32F9Qx_rst_clk.h \
   SPL\MDR32Fx\inc\MDR32F9Qx_ssp.h SPL\MDR32Fx\inc\MDR32F9Qx_port.h \
-  SPL\MDR32Fx\inc\MDR32F9Qx_adc.h \
+  SPL\MDR32Fx\inc\MDR32F9Qx_adc.h SPL\MDR32Fx\inc\MDR32F9Qx_dma.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stddef.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h \

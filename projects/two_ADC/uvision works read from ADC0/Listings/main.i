@@ -2676,6 +2676,285 @@ ITStatus ADC1_GetITStatus(ADC_IT_Def ADC_IT);
     void ADC2_ITConfig(ADC_IT_Def ADC_IT, FunctionalState NewState);
     ITStatus ADC2_GetITStatus(ADC_IT_Def ADC_IT);
 # 17 "main.c" 2
+# 1 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h" 1
+# 57 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_ALternateDataDisabled = ((uint16_t)(0x00)),
+    DMA_ALternateDataEnabled = ((uint16_t)(0x01))
+} DMA_Alt_Data_Usage;
+
+
+
+
+
+
+
+typedef enum
+{
+
+    DMA_Channel_UART1_TX = ((uint8_t)(0)),
+    DMA_Channel_UART1_RX = ((uint8_t)(1)),
+    DMA_Channel_UART2_TX = ((uint8_t)(2)),
+    DMA_Channel_UART2_RX = ((uint8_t)(3)),
+    DMA_Channel_SSP1_TX = ((uint8_t)(4)),
+    DMA_Channel_SSP1_RX = ((uint8_t)(5)),
+    DMA_Channel_SSP2_TX = ((uint8_t)(6)),
+    DMA_Channel_SSP2_RX = ((uint8_t)(7)),
+    DMA_Channel_ADC1 = ((uint8_t)(8)),
+    DMA_Channel_ADC2 = ((uint8_t)(9)),
+    DMA_Channel_TIM1 = ((uint8_t)(10)),
+    DMA_Channel_TIM2 = ((uint8_t)(11)),
+    DMA_Channel_TIM3 = ((uint8_t)(12)),
+    DMA_Channel_SW1 = ((uint8_t)(13)),
+    DMA_Channel_SW2 = ((uint8_t)(14)),
+    DMA_Channel_SW3 = ((uint8_t)(15)),
+    DMA_Channel_SW4 = ((uint8_t)(16)),
+    DMA_Channel_SW5 = ((uint8_t)(17)),
+    DMA_Channel_SW6 = ((uint8_t)(18)),
+    DMA_Channel_SW7 = ((uint8_t)(19)),
+    DMA_Channel_SW8 = ((uint8_t)(20)),
+    DMA_Channel_SW9 = ((uint8_t)(21)),
+    DMA_Channel_SW10 = ((uint8_t)(22)),
+    DMA_Channel_SW11 = ((uint8_t)(23)),
+    DMA_Channel_SW12 = ((uint8_t)(24)),
+    DMA_Channel_SW13 = ((uint8_t)(25)),
+    DMA_Channel_SW14 = ((uint8_t)(26)),
+    DMA_Channel_SW15 = ((uint8_t)(27)),
+    DMA_Channel_SW16 = ((uint8_t)(28)),
+    DMA_Channel_SW17 = ((uint8_t)(29)),
+    DMA_Channel_SW18 = ((uint8_t)(30)),
+    DMA_Channel_SW19 = ((uint8_t)(31)),
+# 299 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+} DMA_Valid_Channels;
+
+
+
+
+
+
+typedef enum
+{
+    DMA_SourceIncByte = ((uint32_t)0x00),
+    DMA_SourceIncHalfword = ((uint32_t)0x01),
+    DMA_SourceIncWord = ((uint32_t)0x02),
+    DMA_SourceIncNo = ((uint32_t)0x03)
+} DMA_Src_Inc_Mode;
+# 322 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_DestIncByte = ((uint32_t)0x00),
+    DMA_DestIncHalfword = ((uint32_t)0x01),
+    DMA_DestIncWord = ((uint32_t)0x02),
+    DMA_DestIncNo = ((uint32_t)0x03)
+} DMA_Dest_Inc_Mode;
+# 338 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_MemoryDataSize_Byte = ((uint32_t)(0x00 << 24)),
+    DMA_MemoryDataSize_HalfWord = ((uint32_t)(0x11 << 24)),
+    DMA_MemoryDataSize_Word = ((uint32_t)(0x22 << 24))
+} DMA_Mem_Data_Size;
+# 352 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_Mode_Stop = ((uint32_t)0x0),
+    DMA_Mode_Basic = ((uint32_t)0x1),
+    DMA_Mode_AutoRequest = ((uint32_t)0x2),
+    DMA_Mode_PingPong = ((uint32_t)0x3),
+    DMA_Mode_MemScatterPri = ((uint32_t)0x4),
+    DMA_Mode_MemScatterAlt = ((uint32_t)0x5),
+    DMA_Mode_PerScatterPri = ((uint32_t)0x6),
+    DMA_Mode_PerScatterAlt = ((uint32_t)0x7),
+    DMA_Mode_PerScatterAltBurst = ((uint32_t)0xF)
+} DMA_Operating_Mode;
+# 386 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_Priority_Default = ((uint8_t)0x00),
+    DMA_Priority_High = ((uint8_t)0x01)
+} DMA_Priority_Level;
+
+
+
+
+
+
+
+typedef enum
+{
+    DMA_BurstClear = ((uint8_t)0x00),
+    DMA_BurstSet = ((uint8_t)0x01)
+} DMA_Burst_Mode;
+
+
+
+
+
+
+
+typedef enum
+{
+    DMA_SourceCacheable = ((uint32_t)(0x01 << 20)),
+    DMA_SourceBufferable = ((uint32_t)(0x01 << 19)),
+    DMA_SourcePrivileged = ((uint32_t)(0x01 << 18))
+} DMA_Src_Protection_Control;
+
+
+
+
+
+
+typedef enum
+{
+    DMA_DestCacheable = ((uint32_t)(0x01 << 23)),
+    DMA_DestBufferable = ((uint32_t)(0x01 << 22)),
+    DMA_DestPrivileged = ((uint32_t)(0x01 << 21))
+} DMA_Dest_Protection_Control;
+# 442 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_AHB_Cacheable = ((uint32_t)(0x01 << 7)),
+    DMA_AHB_Bufferable = ((uint32_t)(0x01 << 6)),
+    DMA_AHB_Privileged = ((uint32_t)(0x01 << 5))
+} DMA_AHB_Protection_Control;
+
+
+
+
+
+
+typedef enum
+{
+    DMA_Transfers_1 = ((uint32_t)(0x00 << 14)),
+    DMA_Transfers_2 = ((uint32_t)(0x01 << 14)),
+    DMA_Transfers_4 = ((uint32_t)(0x02 << 14)),
+    DMA_Transfers_8 = ((uint32_t)(0x03 << 14)),
+    DMA_Transfers_16 = ((uint32_t)(0x04 << 14)),
+    DMA_Transfers_32 = ((uint32_t)(0x05 << 14)),
+    DMA_Transfers_64 = ((uint32_t)(0x06 << 14)),
+    DMA_Transfers_128 = ((uint32_t)(0x07 << 14)),
+    DMA_Transfers_256 = ((uint32_t)(0x08 << 14)),
+    DMA_Transfers_512 = ((uint32_t)(0x09 << 14)),
+    DMA_Transfers_1024 = ((uint32_t)(0x0A << 14))
+} DMA_Number_Continuous_Transfers;
+# 484 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_CTRL_DATA_PRIMARY = ((uint8_t)0x00),
+
+    DMA_CTRL_DATA_ALTERNATE = ((uint8_t)0x01)
+
+} DMA_Data_Struct_Selection;
+# 502 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef enum
+{
+    DMA_FLAG_DMA_ENA = ((uint8_t)0x01),
+    DMA_FLAG_DMA_ERR = ((uint8_t)0x02),
+    DMA_FLAG_CHNL_ENA = ((uint8_t)0x03),
+    DMA_FLAG_CHNL_MASK = ((uint8_t)0x04),
+    DMA_FLAG_CHNL_WAIT = ((uint8_t)0x05),
+    DMA_FLAG_CHNL_BURST = ((uint8_t)0x06),
+    DMA_FLAG_CHNL_ALT = ((uint8_t)0x07),
+    DMA_FLAG_CHNL_PRIORITY = ((uint8_t)0x08)
+} DMA_Flags;
+# 526 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+typedef struct
+{
+    uint32_t DMA_SourceBaseAddr;
+    uint32_t DMA_DestBaseAddr;
+    DMA_Src_Inc_Mode DMA_SourceIncSize;
+
+    DMA_Dest_Inc_Mode DMA_DestIncSize;
+
+    DMA_Mem_Data_Size DMA_MemoryDataSize;
+
+    DMA_Operating_Mode DMA_Mode;
+
+    uint32_t DMA_CycleSize;
+
+    DMA_Number_Continuous_Transfers DMA_NumContinuous;
+
+    uint32_t DMA_SourceProtCtrl;
+
+    uint32_t DMA_DestProtCtrl;
+
+} DMA_CtrlDataInitTypeDef;
+
+
+
+
+typedef struct
+{
+    uint32_t DMA_SourceEndAddr;
+    uint32_t DMA_DestEndAddr;
+    uint32_t DMA_Control;
+    uint32_t DMA_Unused;
+} DMA_CtrlDataTypeDef;
+
+
+
+
+typedef struct
+{
+    DMA_CtrlDataInitTypeDef *DMA_PriCtrlData;
+
+    DMA_CtrlDataInitTypeDef *DMA_AltCtrlData;
+
+    uint32_t DMA_ProtCtrl;
+
+    DMA_Priority_Level DMA_Priority;
+
+    DMA_Burst_Mode DMA_UseBurst;
+
+    DMA_Data_Struct_Selection DMA_SelectDataStructure;
+
+} DMA_ChannelInitTypeDef;
+
+
+
+
+typedef struct
+{
+    DMA_CtrlDataTypeDef *DMA_SG_TaskArray;
+
+
+
+
+    uint32_t DMA_SG_TaskNumber;
+    uint32_t DMA_SourceProtCtrl;
+
+    uint32_t DMA_DestProtCtrl;
+
+    uint32_t DMA_ProtCtrl;
+
+    DMA_Priority_Level DMA_Priority;
+
+    DMA_Burst_Mode DMA_UseBurst;
+
+} DMA_Channel_SG_InitTypeDef;
+# 608 "./SPL/MDR32Fx/inc\\MDR32F9Qx_dma.h"
+void DMA_DeInit(void);
+
+void DMA_CtrlDataInit(DMA_CtrlDataInitTypeDef *DMA_ctrl_data_ptr, DMA_CtrlDataTypeDef *DMA_ctrl_table_ptr);
+void DMA_CtrlInit(uint8_t DMA_Channel, DMA_Data_Struct_Selection DMA_CtrlDataType, DMA_CtrlDataInitTypeDef* DMA_CtrlStruct);
+void DMA_SG_CtrlInit(uint32_t DMA_Task, DMA_CtrlDataTypeDef *DMA_SG_TaskArray, DMA_CtrlDataInitTypeDef* DMA_CtrlStruct);
+
+void DMA_SG_Init(uint8_t DMA_Channel, DMA_Channel_SG_InitTypeDef *DMA_SG_InitStruct);
+void DMA_Init(uint8_t DMA_Channel, DMA_ChannelInitTypeDef* DMA_InitStruct);
+
+void DMA_StructInit(DMA_ChannelInitTypeDef* DMA_InitStruct);
+void DMA_SG_StructInit(DMA_Channel_SG_InitTypeDef* DMA_InitStruct);
+
+void DMA_Cmd(uint8_t DMA_Channel, FunctionalState NewState);
+
+void DMA_Request(uint8_t DMA_Channel);
+void DMA_ClearError(void);
+
+uint32_t DMA_GetCurrTransferCounter(uint8_t DMA_Channel, DMA_Data_Struct_Selection DMA_CtrlData);
+
+FlagStatus DMA_GetFlagStatus(uint8_t DMA_Channel, DMA_Flags DMA_Flag);
+# 18 "main.c" 2
 
 # 1 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stddef.h" 1 3
 # 38 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stddef.h" 3
@@ -2684,7 +2963,7 @@ ITStatus ADC1_GetITStatus(ADC_IT_Def ADC_IT);
     typedef unsigned int size_t;
 # 71 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stddef.h" 3
       typedef unsigned short wchar_t;
-# 19 "main.c" 2
+# 20 "main.c" 2
 # 1 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\string.h" 1 3
 # 58 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\string.h" 3
 extern __attribute__((__nothrow__)) void *memcpy(void * __restrict ,
@@ -2801,7 +3080,7 @@ extern __attribute__((__nothrow__)) void _membitmovehl(void * , const void * , i
 extern __attribute__((__nothrow__)) void _membitmovehb(void * , const void * , int , int , size_t ) __attribute__((__nonnull__(1,2)));
 extern __attribute__((__nothrow__)) void _membitmovewl(void * , const void * , int , int , size_t ) __attribute__((__nonnull__(1,2)));
 extern __attribute__((__nothrow__)) void _membitmovewb(void * , const void * , int , int , size_t ) __attribute__((__nonnull__(1,2)));
-# 20 "main.c" 2
+# 21 "main.c" 2
 # 1 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stdio.h" 1 3
 # 68 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stdio.h" 3
     typedef __builtin_va_list __va_list;
@@ -3121,14 +3400,14 @@ extern __attribute__((__nothrow__)) int _fisatty(FILE * ) __attribute__((__nonnu
 
 extern __attribute__((__nothrow__)) void __use_no_semihosting_swi(void);
 extern __attribute__((__nothrow__)) void __use_no_semihosting(void);
-# 21 "main.c" 2
+# 22 "main.c" 2
 # 1 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stdarg.h" 1 3
 # 40 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stdarg.h" 3
   typedef __builtin_va_list va_list;
 # 134 "C:\\Keil_v5\\ARM\\ARMCLANG\\Bin\\..\\include\\stdarg.h" 3
      typedef va_list __gnuc_va_list;
-# 22 "main.c" 2
-# 42 "main.c"
+# 23 "main.c" 2
+# 43 "main.c"
 static USB_Clock_TypeDef USB_Clock_InitStruct;
 static USB_DeviceBUSParam_TypeDef USB_DeviceBUSParam;
 static MDR_SSP_TypeDef SSP_InitStruct;
@@ -3145,10 +3424,14 @@ char tokens[5][128 * 2];
 char tempString[100];
 
 
+
 ADC_InitTypeDef sADC;
 ADCx_InitTypeDef sADCx;
 
-
+DMA_ChannelInitTypeDef sDMA;
+DMA_CtrlDataInitTypeDef sDMA_PriCtrlData;
+DMA_CtrlDataInitTypeDef sDMA_AltCtrlData;
+# 74 "main.c"
 static USB_CDC_LineCoding_TypeDef LineCoding;
 
 
@@ -3157,6 +3440,7 @@ static void Setup_CPU_Clock(void);
 static void Setup_USB(void);
 static void VCom_Configuration(void);
 static void USB_PrintDebug(char *format, ...);
+static void SetupDMA();
 static void SetupADC();
 void ADC_IRQHandler(void);
 
@@ -3169,7 +3453,7 @@ void delayTick(uint32_t count)
   __NOP();
  }
 }
-# 97 "main.c"
+# 112 "main.c"
 void USB_Print(char *format, ...)
 {
  va_list argptr;
@@ -3178,25 +3462,31 @@ void USB_Print(char *format, ...)
  vsprintf(tempString, format, argptr);
  __builtin_va_end(argptr);
  USB_CDC_SendData((uint8_t *)tempString, strlen(tempString));
- delayTick(10);
+
+
 }
 
 void USB_PrintDebug(char *format, ...)
 {
-# 120 "main.c"
+# 136 "main.c"
 }
 
 
-uint16_t ADC1_array[20];
-uint16_t ADC2_array[20];
+uint16_t ADC1_array[50];
+uint16_t ADC2_array[50];
 
 uint8_t ADC_USER_COUNTER = 0;
+
+int ADC_TX_REQUEST = 0;
+
 int main(void)
 {
+
  VCom_Configuration();
 
 
  SetupADC();
+ SetupDMA();
  USB_CDC_Init(Buffer, 1, SET);
  Setup_CPU_Clock();
  Setup_USB();
@@ -3210,15 +3500,18 @@ int main(void)
  PORT_Init(((MDR_PORT_TypeDef *) (0x400B8000)), &PORT_InitStructure);
 
 
- while (1)
- {
+ while (1){
+  if(ADC_TX_REQUEST) {
 
 
 
 
+   USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
+   , ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
+   ADC_TX_REQUEST = 0;
+  }
  }
 }
-
 void SetupADC()
 {
 
@@ -3258,7 +3551,7 @@ void SetupADC()
     sADCx.ADC_Channels = (((uint32_t)0x1) << ADC_CH_ADC0 );
     sADCx.ADC_VRefSource = ADC_VREF_SOURCE_INTERNAL;
     sADCx.ADC_IntVRefSource = ADC_INT_VREF_SOURCE_INEXACT;
-    sADCx.ADC_Prescaler = ADC_CLK_div_16;
+    sADCx.ADC_Prescaler = ADC_CLK_div_32;
     sADCx.ADC_DelayGo = 0xF;
     ADC1_Init (&sADCx);
 
@@ -3270,6 +3563,9 @@ void SetupADC()
     ADC1_ITConfig((ADCx_IT_END_OF_CONVERSION), ENABLE);
 
 
+
+
+
     ADC1_Cmd (ENABLE);
   ADC2_Cmd (ENABLE);
 }
@@ -3277,29 +3573,25 @@ void SetupADC()
 
 void ADC_IRQHandler(void)
 {
+ DMA_Request(DMA_Channel_ADC1);
 
 
  if (ADC_USER_COUNTER % 2) {
   ADC1_array[ADC_USER_COUNTER++ / 2] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT & 0x0FFF;
  }
 
- else {
-  ADC2_array[ADC_USER_COUNTER++ / 2] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC2_RESULT & 0x0FFF;
- }
+
+
+
 
 
  if (ADC_USER_COUNTER > 39) {
 
- ADC_USER_COUNTER = 0;
+  ADC_USER_COUNTER = 0;
 
-
-
-
-
- USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
- , ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
+  ADC_TX_REQUEST = 1;
  }
- }
+}
 
 
 
@@ -3366,6 +3658,8 @@ void Setup_USB(void)
 
  USB_SetSIM(((uint32_t)0x00000001) | ((uint32_t)0x00000002) | ((uint32_t)0x00000004) | ((uint32_t)0x00000008) | ((uint32_t)0x00000010));
 
+
+
  USB_DevicePowerOn();
 
 
@@ -3404,7 +3698,7 @@ USB_Result USB_CDC_RecieveData(uint8_t *Buffer, uint32_t Length)
  RecBuf[Length] = 0;
  return USB_SUCCESS;
 }
-# 349 "main.c"
+# 374 "main.c"
 USB_Result USB_CDC_GetLineCoding(uint16_t wINDEX, USB_CDC_LineCoding_TypeDef *DATA)
 {
  ((void)0U);
@@ -3437,4 +3731,38 @@ USB_Result USB_CDC_SetLineCoding(uint16_t wINDEX, const USB_CDC_LineCoding_TypeD
 
  LineCoding = *DATA;
  return USB_SUCCESS;
+}
+
+
+
+
+
+
+void SetupDMA() {
+
+ RST_CLK_PCLKcmd(((uint32_t)(1U << ((((uint32_t)(0x40028000)) >> 15) & 0x1F))), ENABLE);
+
+
+ sDMA_PriCtrlData.DMA_SourceBaseAddr = (uint32_t) &((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT;
+ sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC2_array;
+ sDMA_PriCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;
+ sDMA_PriCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;
+ sDMA_PriCtrlData.DMA_Mode = DMA_Mode_Basic;
+ sDMA_PriCtrlData.DMA_CycleSize = 16;
+ sDMA_PriCtrlData.DMA_NumContinuous = DMA_Transfers_16;
+ sDMA_PriCtrlData.DMA_SourceProtCtrl = DMA_SourceCacheable;
+ sDMA_PriCtrlData.DMA_DestProtCtrl = DMA_SourceCacheable;
+
+
+ sDMA.DMA_PriCtrlData = &sDMA_PriCtrlData;
+ sDMA.DMA_AltCtrlData = 0;
+ sDMA.DMA_ProtCtrl = DMA_AHB_Cacheable;
+ sDMA.DMA_Priority = DMA_Priority_High;
+ sDMA.DMA_UseBurst = DMA_BurstClear;
+ sDMA.DMA_SelectDataStructure = DMA_CTRL_DATA_PRIMARY;
+
+
+ DMA_Init(DMA_Channel_ADC1, &sDMA);
+
+ DMA_Cmd(DMA_Channel_ADC1, ENABLE);
 }
