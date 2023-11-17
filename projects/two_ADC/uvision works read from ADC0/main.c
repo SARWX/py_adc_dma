@@ -138,6 +138,7 @@ void USB_PrintDebug(char *format, ...)
 // global arrays for ADC buffers
 uint16_t ADC1_array[50];
 uint16_t ADC2_array[50];
+uint16_t ADC3_array[50];
 // common ADC counter
 uint8_t ADC_USER_COUNTER = 0;
 // ADC transmit request
@@ -165,7 +166,14 @@ int main(void)
 
 	/* Main loop */
 	while (1){
-		if(ADC_TX_REQUEST) {
+		DMA_Init(DMA_Channel_ADC1, &sDMA);
+//		MDR_DMA->CHNL_REQ_MASK_CLR = 1 << DMA_Channel_ADC1;
+//		MDR_DMA->CHNL_USEBURST_CLR = 1 << DMA_Channel_ADC1;
+		DMA_Cmd(DMA_Channel_ADC1, ENABLE);
+		//DMA_Request(DMA_Channel_ADC1);
+		
+		//delayTick(0xFFFF);
+		//if(ADC_TX_REQUEST) {
 			// Send data by USB
 			//	USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC2_array[0], ADC2_array[1], ADC2_array[2],ADC2_array[3], ADC2_array[4], ADC2_array[5], ADC2_array[6], ADC2_array[7], ADC2_array[8], ADC2_array[9]
 			//	, ADC2_array[10], ADC2_array[11], ADC2_array[12],ADC2_array[13], ADC2_array[14], ADC2_array[15], ADC2_array[16], ADC2_array[17], ADC2_array[18], ADC2_array[19]);
@@ -173,8 +181,11 @@ int main(void)
 			USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
 			, ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
 			ADC_TX_REQUEST = 0;
+		
+		DMA_Init(DMA_Channel_ADC1, &sDMA);
+		DMA_Cmd(DMA_Channel_ADC1, ENABLE);
 		}
-	}
+//	}
 }
 void SetupADC()
 {
@@ -235,13 +246,14 @@ void SetupADC()
 }
 
 // обработчик прерываний
+/*
 void ADC_IRQHandler(void)
 {
-	DMA_Request(DMA_Channel_ADC1);
+
 	// Write mesurenment to the buffer
 	// ALL ODD ADC MESURENMENTS write to ADC1_array
 	if (ADC_USER_COUNTER % 2) {						
-		ADC1_array[ADC_USER_COUNTER++ / 2] = MDR_ADC->ADC1_RESULT & 0x0FFF;
+		ADC3_array[ADC_USER_COUNTER++ / 2] = MDR_ADC->ADC1_RESULT & 0x0FFF;
 	}
 	// ALL EVEN ADC MESURENMENTS write to ADC2_array
 	else {
@@ -262,6 +274,7 @@ void ADC_IRQHandler(void)
 	* @param	None
 	* @retval None
 	*/
+
 void Setup_CPU_Clock(void)
 {
 	/* Enable HSE */
@@ -408,15 +421,72 @@ USB_Result USB_CDC_SetLineCoding(uint16_t wINDEX, const USB_CDC_LineCoding_TypeD
 #endif /* USB_CDC_LINE_CODING_SUPPORTED */
 
 
-
+// DMA_CtrlDataInitTypeDef sDMA_AltCtrlData;
 
 void SetupDMA() {
+	
+
+	// Разрешить тактирование DMA
+	RST_CLK_PCLKcmd (RST_CLK_PCLK_DMA | RST_CLK_PCLK_SSP1 |
+	RST_CLK_PCLK_SSP2, ENABLE);
+	// Запретить все прерывания, в том числе от SSP1 и SSP2
+	NVIC->ICPR[0] = 0xFFFFFFFF;
+	NVIC->ICER[0] = 0xFFFFFFFF;
+	// Сбросить все настройки DMA
+	DMA_DeInit();
+	DMA_StructInit (&sDMA);
+	sDMA_PriCtrlData.DMA_SourceBaseAddr =
+	(uint32_t)(&(MDR_ADC->ADC1_RESULT));
+	sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC1_array;
+	sDMA_PriCtrlData.DMA_CycleSize = 20;
+	sDMA_PriCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;
+	sDMA_PriCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;
+	sDMA_PriCtrlData.DMA_MemoryDataSize =
+	DMA_MemoryDataSize_HalfWord;
+	sDMA_PriCtrlData.DMA_NumContinuous = DMA_Transfers_1;
+	sDMA_PriCtrlData.DMA_SourceProtCtrl = DMA_SourcePrivileged;
+	sDMA_PriCtrlData.DMA_DestProtCtrl = DMA_DestPrivileged;
+	sDMA_PriCtrlData.DMA_Mode = DMA_Mode_Basic;
+	/*
+		sDMA_AltCtrlData.DMA_SourceBaseAddr =
+	(uint32_t)(&(MDR_ADC->ADC1_RESULT));
+	sDMA_AltCtrlData.DMA_DestBaseAddr = (uint32_t) ADC1_array;
+	sDMA_AltCtrlData.DMA_CycleSize = 20;
+	sDMA_AltCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;
+	sDMA_AltCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;
+	sDMA_AltCtrlData.DMA_MemoryDataSize =
+	DMA_MemoryDataSize_HalfWord;
+	sDMA_AltCtrlData.DMA_NumContinuous = DMA_Transfers_1;
+	sDMA_AltCtrlData.DMA_SourceProtCtrl = DMA_SourcePrivileged;
+	sDMA_AltCtrlData.DMA_DestProtCtrl = DMA_DestPrivileged;
+	sDMA_AltCtrlData.DMA_Mode = DMA_Mode_PingPong;
+	*/
+	
+	
+	// Задать структуру канала
+	sDMA.DMA_PriCtrlData = &sDMA_PriCtrlData;
+	sDMA.DMA_AltCtrlData = &sDMA_AltCtrlData;	
+	sDMA.DMA_Priority = DMA_Priority_Default;
+	sDMA.DMA_UseBurst = DMA_BurstClear;
+	sDMA.DMA_SelectDataStructure =
+	DMA_CTRL_DATA_PRIMARY;
+	// Инициализировать канал
+	DMA_Init(DMA_Channel_ADC1, &sDMA);
+	MDR_DMA->CHNL_REQ_MASK_CLR = 1 << DMA_Channel_ADC1;
+	MDR_DMA->CHNL_USEBURST_CLR = 1 << DMA_Channel_ADC1;
+	// Разрешить работу DMA с каналом АЦП1
+	DMA_Cmd (DMA_Channel_ADC1, ENABLE);
+	// Задать приоритет аппаратного прерывания от DMA
+	NVIC_SetPriority (DMA_IRQn, 1);
+
+	
+	/*
 	// enable clocking
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE);		// enable clocking of the dma controller
 	
 	// initialize DMA CtrlData structure
 	sDMA_PriCtrlData.DMA_SourceBaseAddr = (uint32_t) &MDR_ADC->ADC1_RESULT;		// From where we will get the data
-	sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC2_array;								// Our buffer for adc1
+	sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC1_array;								// Our buffer for adc1
 	sDMA_PriCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;											// NO increment for ADC
 	sDMA_PriCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;										// increment = 16 bit for our uint_16t buffer
 	sDMA_PriCtrlData.DMA_Mode = DMA_Mode_Basic;																// DMA mode
@@ -430,13 +500,14 @@ void SetupDMA() {
 	sDMA.DMA_AltCtrlData = NULL;																							// dont use, so NULL
 	sDMA.DMA_ProtCtrl = DMA_AHB_Cacheable;
 	sDMA.DMA_Priority = DMA_Priority_High;																			// high priority
-	sDMA.DMA_UseBurst = DMA_BurstClear; 
+	sDMA.DMA_UseBurst = DMA_BurstClear; 																			// enable single request
 	sDMA.DMA_SelectDataStructure = DMA_CTRL_DATA_PRIMARY;											// select primary Data Structure
 	
 	// initialize DMA
 	DMA_Init(DMA_Channel_ADC1, &sDMA);				// init 8 channel via sDMA structure (8 channel - DMA_Channel_ADC1)
 	// enable DMA
 	DMA_Cmd(DMA_Channel_ADC1, ENABLE);
+	*/
 }
 
 

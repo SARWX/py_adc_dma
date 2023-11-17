@@ -3474,6 +3474,7 @@ void USB_PrintDebug(char *format, ...)
 
 uint16_t ADC1_array[50];
 uint16_t ADC2_array[50];
+uint16_t ADC3_array[50];
 
 uint8_t ADC_USER_COUNTER = 0;
 
@@ -3501,16 +3502,16 @@ int main(void)
 
 
  while (1){
-  if(ADC_TX_REQUEST) {
+  DMA_Init(DMA_Channel_ADC1, &sDMA);
 
 
-
-
+  DMA_Cmd(DMA_Channel_ADC1, ENABLE);
+# 181 "main.c"
    USB_Print("%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n", ADC1_array[0], ADC1_array[1], ADC1_array[2],ADC1_array[3], ADC1_array[4], ADC1_array[5], ADC1_array[6], ADC1_array[7], ADC1_array[8], ADC1_array[9]
    , ADC1_array[10], ADC1_array[11], ADC1_array[12],ADC1_array[13], ADC1_array[14], ADC1_array[15], ADC1_array[16], ADC1_array[17], ADC1_array[18], ADC1_array[19]);
    ADC_TX_REQUEST = 0;
   }
- }
+
 }
 void SetupADC()
 {
@@ -3569,35 +3570,7 @@ void SetupADC()
     ADC1_Cmd (ENABLE);
   ADC2_Cmd (ENABLE);
 }
-
-
-void ADC_IRQHandler(void)
-{
- DMA_Request(DMA_Channel_ADC1);
-
-
- if (ADC_USER_COUNTER % 2) {
-  ADC1_array[ADC_USER_COUNTER++ / 2] = ((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT & 0x0FFF;
- }
-
-
-
-
-
-
- if (ADC_USER_COUNTER > 39) {
-
-  ADC_USER_COUNTER = 0;
-
-  ADC_TX_REQUEST = 1;
- }
-}
-
-
-
-
-
-
+# 275 "main.c"
 void Setup_CPU_Clock(void)
 {
 
@@ -3698,7 +3671,7 @@ USB_Result USB_CDC_RecieveData(uint8_t *Buffer, uint32_t Length)
  RecBuf[Length] = 0;
  return USB_SUCCESS;
 }
-# 374 "main.c"
+# 384 "main.c"
 USB_Result USB_CDC_GetLineCoding(uint16_t wINDEX, USB_CDC_LineCoding_TypeDef *DATA)
 {
  ((void)0U);
@@ -3740,29 +3713,42 @@ USB_Result USB_CDC_SetLineCoding(uint16_t wINDEX, const USB_CDC_LineCoding_TypeD
 
 void SetupDMA() {
 
- RST_CLK_PCLKcmd(((uint32_t)(1U << ((((uint32_t)(0x40028000)) >> 15) & 0x1F))), ENABLE);
 
 
- sDMA_PriCtrlData.DMA_SourceBaseAddr = (uint32_t) &((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT;
- sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC2_array;
+ RST_CLK_PCLKcmd (((uint32_t)(1U << ((((uint32_t)(0x40028000)) >> 15) & 0x1F))) | ((uint32_t)(1U << ((((uint32_t)(0x40040000)) >> 15) & 0x1F))) |
+ ((uint32_t)(1U << ((((uint32_t)(0x400A0000)) >> 15) & 0x1F))), ENABLE);
+
+ ((NVIC_Type *) ((0xE000E000UL) + 0x0100UL) )->ICPR[0] = 0xFFFFFFFF;
+ ((NVIC_Type *) ((0xE000E000UL) + 0x0100UL) )->ICER[0] = 0xFFFFFFFF;
+
+ DMA_DeInit();
+ DMA_StructInit (&sDMA);
+ sDMA_PriCtrlData.DMA_SourceBaseAddr =
+ (uint32_t)(&(((MDR_ADC_TypeDef *) (0x40088000))->ADC1_RESULT));
+ sDMA_PriCtrlData.DMA_DestBaseAddr = (uint32_t) ADC1_array;
+ sDMA_PriCtrlData.DMA_CycleSize = 20;
  sDMA_PriCtrlData.DMA_SourceIncSize = DMA_SourceIncNo;
  sDMA_PriCtrlData.DMA_DestIncSize = DMA_DestIncHalfword;
+ sDMA_PriCtrlData.DMA_MemoryDataSize =
+ DMA_MemoryDataSize_HalfWord;
+ sDMA_PriCtrlData.DMA_NumContinuous = DMA_Transfers_1;
+ sDMA_PriCtrlData.DMA_SourceProtCtrl = DMA_SourcePrivileged;
+ sDMA_PriCtrlData.DMA_DestProtCtrl = DMA_DestPrivileged;
  sDMA_PriCtrlData.DMA_Mode = DMA_Mode_Basic;
- sDMA_PriCtrlData.DMA_CycleSize = 16;
- sDMA_PriCtrlData.DMA_NumContinuous = DMA_Transfers_16;
- sDMA_PriCtrlData.DMA_SourceProtCtrl = DMA_SourceCacheable;
- sDMA_PriCtrlData.DMA_DestProtCtrl = DMA_SourceCacheable;
-
-
+# 464 "main.c"
  sDMA.DMA_PriCtrlData = &sDMA_PriCtrlData;
- sDMA.DMA_AltCtrlData = 0;
- sDMA.DMA_ProtCtrl = DMA_AHB_Cacheable;
- sDMA.DMA_Priority = DMA_Priority_High;
+ sDMA.DMA_AltCtrlData = &sDMA_AltCtrlData;
+ sDMA.DMA_Priority = DMA_Priority_Default;
  sDMA.DMA_UseBurst = DMA_BurstClear;
- sDMA.DMA_SelectDataStructure = DMA_CTRL_DATA_PRIMARY;
-
+ sDMA.DMA_SelectDataStructure =
+ DMA_CTRL_DATA_PRIMARY;
 
  DMA_Init(DMA_Channel_ADC1, &sDMA);
+ ((MDR_DMA_TypeDef *) (0x40028000))->CHNL_REQ_MASK_CLR = 1 << DMA_Channel_ADC1;
+ ((MDR_DMA_TypeDef *) (0x40028000))->CHNL_USEBURST_CLR = 1 << DMA_Channel_ADC1;
 
- DMA_Cmd(DMA_Channel_ADC1, ENABLE);
+ DMA_Cmd (DMA_Channel_ADC1, ENABLE);
+
+ NVIC_SetPriority (DMA_IRQn, 1);
+# 508 "main.c"
 }
